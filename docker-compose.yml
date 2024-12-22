@@ -1,0 +1,19 @@
+version: '3'
+
+name: semantic-search-system
+
+services:
+  postgres:
+    container_name: pgvector
+    image: pgvector/pgvector:pg17
+    ports:
+      - 54321:5432
+    environment:
+      - POSTGRES_USER=sssadmin
+      - POSTGRES_PASSWORD=abc12345
+      - POSTGRES_DB=projectdb
+    volumes:
+      - projectdb64:/var/lib/postgresql/data
+
+volumes:
+  projectdb64:
