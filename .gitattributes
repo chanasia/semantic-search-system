@@ -1,0 +1,2 @@
+backend-go/lib/libtokenizers.a filter=lfs diff=lfs merge=lfs -text
+backend-go/lib/model/* filter=lfs diff=lfs merge=lfs -text
