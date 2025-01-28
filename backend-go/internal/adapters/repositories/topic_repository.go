@@ -3,8 +3,12 @@ package repositories
 import (
 	// "time"
 
+	"fmt"
+
 	"github.com/chanasia/semantic-search-system/internal/core/domain"
+	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type topicRepository struct {
@@ -13,6 +17,36 @@ type topicRepository struct {
 
 func NewTopicRepository(db *gorm.DB) domain.TopicRepository {
 	return &topicRepository{db: db}
+}
+
+func (r *topicRepository) SearchBySimilarity(embedding []float32, limit int) ([]domain.TopicWithSimilarity, error) {
+	var results []domain.TopicWithSimilarity
+
+	// ใช้ GORM Joins และ Clauses สำหรับ similarity search
+	err := r.db.Model(&domain.Topic{}).
+		// เลือก fields ที่ต้องการและคำนวณ similarity
+		Select("topics.*, 1 - (topic_embeddings.embedding <=> ?) as similarity", pgvector.NewVector(embedding)).
+		Joins("JOIN topic_embeddings ON topics.id = topic_embeddings.topic_id").
+		// เรียงลำดับตาม similarity จากมากไปน้อย
+		Clauses(clause.OrderBy{
+			Expression: clause.Expr{SQL: "similarity DESC"},
+		}).
+		Limit(limit).
+		Find(&results).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to search by similarity: %w", err)
+	}
+
+	for i := range results {
+		if err := r.db.Model(&domain.TopicImage{}).
+			Where("topic_id = ?", results[i].ID).
+			Find(&results[i].TopicImages).Error; err != nil {
+			return nil, fmt.Errorf("failed to fetch topic images: %w", err)
+		}
+	}
+
+	return results, nil
 }
 
 func (r *topicRepository) Create(tx *gorm.DB, topic *domain.Topic) error {

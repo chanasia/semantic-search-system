@@ -8,9 +8,11 @@ import (
 )
 
 type Topic struct {
-	ID              int64            `json:"id" gorm:"primaryKey"`
+	ID              int32            `json:"id" gorm:"primaryKey"`
 	Title           string           `json:"title" gorm:"notNull"`
 	Context         string           `json:"context"  gorm:"notNull"`
+	Page            string           `json:"page"`
+	Tag             string           `json:"tag"`
 	CreatedAt       time.Time        `json:"created_at" gorm:"notNull"`
 	UpdatedAt       time.Time        `json:"updated_at" gorm:"notNull"`
 	TopicImages     []TopicImage     `gorm:"foreignKey:TopicID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -33,6 +35,11 @@ type TopicEmbedding struct {
 	UpdatedAt time.Time       `json:"updated_at" gorm:"notNull"`
 }
 
+type TopicWithSimilarity struct {
+	Topic
+	Similarity float64 `json:"similarity"`
+}
+
 type TopicRepository interface {
 	Create(tx *gorm.DB, topic *Topic) error
 	GetByID(id int64) (*Topic, error)
@@ -40,6 +47,7 @@ type TopicRepository interface {
 	Update(topic *Topic) error
 	Delete(id int64) error
 	List() ([]Topic, error)
+	SearchBySimilarity(embedding []float32, limit int) ([]TopicWithSimilarity, error)
 }
 
 type TopicImageRepository interface {

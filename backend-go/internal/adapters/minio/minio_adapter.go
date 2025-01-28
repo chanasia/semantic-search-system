@@ -99,3 +99,11 @@ func (m *MinioAdapter) FileExists(ctx context.Context, objectName string) (bool,
 	}
 	return true, nil
 }
+
+func (m *MinioAdapter) GetObject(ctx context.Context, objectName string) (io.Reader, error) {
+	obj, err := m.client.GetObject(ctx, m.bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object: %w", err)
+	}
+	return obj, nil
+}

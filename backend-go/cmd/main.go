@@ -13,8 +13,9 @@ import (
 	"github.com/chanasia/semantic-search-system/internal/config"
 	"github.com/chanasia/semantic-search-system/internal/core/domain"
 	"github.com/chanasia/semantic-search-system/internal/core/services"
-	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -106,12 +107,27 @@ func main() {
 	)
 	topicHandler := handlers.NewTopicHandler(topicService)
 
-	app := fiber.New()
-	api := app.Group("/api")
-	v1 := api.Group("/v1")
-	v1.Post("/topics", topicHandler.Create)
-	v1.Get("/topics", topicHandler.List)
-	v1.Get("/topics/:id", topicHandler.Get)
+	// Initialize Echo
+	e := echo.New()
 
-	log.Fatal(app.Listen(":3000"))
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Routes
+	api := e.Group("/api")
+	v1 := api.Group("/v1")
+
+	// Form endpoint - สำหรับ upload files
+	v1.POST("/topics/form", topicHandler.CreateTopicWithFiles)
+	// JSON endpoint - สำหรับส่งแค่ paths
+	v1.POST("/topics/json", topicHandler.CreateTopicJSON)
+	v1.GET("/topics", topicHandler.List)
+	v1.GET("/topics/search", topicHandler.Search) // Make sure search route comes before :id
+	v1.GET("/topics/:id", topicHandler.Get)
+	v1.GET("/topics/:topic_id/images/:image_id", topicHandler.GetTopicImage)
+	v1.GET("/images/:image_id", topicHandler.GetTopicImage)
+
+	// Start server
+	log.Fatal(e.Start(":3000"))
 }
