@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/chanasia/semantic-search-system/internal/adapters/handlers"
 	"github.com/chanasia/semantic-search-system/internal/adapters/hugot"
@@ -18,6 +19,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func main() {
@@ -33,7 +35,19 @@ func main() {
 	DBSchema := config.GetEnv("DB_SCHEMA", "public")
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable search_path=%s", DBHost, DBPort, DBUser, DBPassword, DBName, DBSchema)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,         // Disable color
+		},
+	)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: newLogger,
+	})
 
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
@@ -113,6 +127,13 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	// Add CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173", "http://localhost:3000"}, // เพิ่ม origins ที่ต้องการอนุญาต
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	// Routes
 	api := e.Group("/api")
