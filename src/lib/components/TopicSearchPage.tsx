@@ -202,7 +202,7 @@ export default function TopicSearchPage() {
                           <Tag color="blue">{(topic.similarity * 100).toFixed(1)}% match</Tag>
                         </div>
                     
-                        <p className="text-sm text-gray-600 line-clamp-3 mb-3">{topic.context}</p>
+                        <pre className="text-md text-gray-600 w-full text-wrap">{topic.context}</pre>
                     
                         {topic.tag && (
                           <div className="mb-2">
