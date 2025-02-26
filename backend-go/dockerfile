@@ -1,0 +1,67 @@
+FROM golang:1.24.0-bullseye AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up working directory
+WORKDIR /app
+
+# Copy go mod and go sum files
+COPY go.mod go.sum ./
+
+# Copy lib directory and dependencies
+COPY lib/ ./lib/
+
+# Set environment variables for CGO
+ENV CGO_ENABLED=1
+ENV CGO_LDFLAGS="-L/app/lib -ltokenizers"
+
+# Download dependencies
+RUN go mod download
+
+# Copy the entire codebase
+COPY . .
+
+# Build the application
+RUN go build -o semantic-search-system ./cmd/main.go
+
+# Create runtime image
+FROM debian:buster-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up working directory
+WORKDIR /app
+
+# Create folder structure for models
+RUN mkdir -p /app/lib/models
+
+# Copy binary from builder stage
+COPY --from=builder /app/semantic-search-system /app/
+
+# Copy required libraries
+COPY --from=builder /app/lib/ /app/lib/
+
+# Copy models and necessary files
+COPY --from=builder /app/lib/models/ /app/lib/models/
+
+# Copy .env file
+COPY --from=builder /app/.env /app/
+
+# Set up library path (fixed syntax)
+ENV LD_LIBRARY_PATH=/app/lib
+
+# Grant execute permission
+RUN chmod +x /app/semantic-search-system
+
+# Expose port 3000
+EXPOSE 3000
+
+# Run the application
+CMD ["/app/semantic-search-system"]
