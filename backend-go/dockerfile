@@ -4,16 +4,31 @@ FROM golang:1.24.0-bullseye AS builder
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
+    curl \
+    tar \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up working directory
 WORKDIR /app
 
+RUN mkdir -p /app/lib
+
+# Download and extract tokenizers
+RUN curl -L https://github.com/daulet/tokenizers/releases/download/v1.20.2/libtokenizers.linux-arm64.tar.gz -o /tmp/libtokenizers.tar.gz && \
+    tar -xzf /tmp/libtokenizers.tar.gz -C /app/lib
+
+
+# Download and extract onnxruntime
+RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v1.20.1/onnxruntime-linux-aarch64-1.20.1.tgz \
+    -o /tmp/onnxruntime-linux-aarch64-1.20.1.tgz && \
+    tar -xzvf /tmp/onnxruntime-linux-aarch64-1.20.1.tgz \
+    --transform 's/onnxruntime-linux-aarch64-1.20.1/onnxruntime/' && \
+    cp onnxruntime/lib/libonnxruntime.so.1.20.1 /app/lib/libonnxruntime.so
+
+RUN rm -r /tmp/*
+
 # Copy go mod and go sum files
 COPY go.mod go.sum ./
-
-# Copy lib directory and dependencies
-COPY lib/ ./lib/
 
 # Set environment variables for CGO
 ENV CGO_ENABLED=1
@@ -29,9 +44,9 @@ COPY . .
 RUN go build -o semantic-search-system ./cmd/main.go
 
 # Create runtime image
-FROM debian:buster-slim
+FROM --platform=linux/arm64 ubuntu:24.04
 
-# Install runtime dependencies
+# Install runtime dependencies (lightened)
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -48,13 +63,13 @@ COPY --from=builder /app/semantic-search-system /app/
 # Copy required libraries
 COPY --from=builder /app/lib/ /app/lib/
 
-# Copy models and necessary files
-COPY --from=builder /app/lib/models/ /app/lib/models/
-
 # Copy .env file
 COPY --from=builder /app/.env /app/
 
-# Set up library path (fixed syntax)
+# Create symbolic link for onnxruntime.so if needed
+RUN ln -sf /app/lib/libonnxruntime.so /app/lib/onnxruntime.so
+
+# Set up library path
 ENV LD_LIBRARY_PATH=/app/lib
 
 # Grant execute permission

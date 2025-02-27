@@ -1,6 +1,9 @@
 package hugot
 
-import "github.com/knights-analytics/hugot"
+import (
+	"github.com/knights-analytics/hugot"
+	"github.com/knights-analytics/hugot/options"
+)
 
 type HugotSessionManager struct {
 	session *hugot.Session
@@ -11,7 +14,9 @@ func NewHugotSessionManager() *HugotSessionManager {
 }
 
 func (m *HugotSessionManager) Initialize() error {
-	session, err := hugot.NewORTSession()
+	session, err := hugot.NewORTSession(
+		options.WithOnnxLibraryPath("lib/libonnxruntime.so"),
+	)
 	if err != nil {
 		return err
 	}

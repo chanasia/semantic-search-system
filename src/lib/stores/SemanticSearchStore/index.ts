@@ -1,18 +1,18 @@
-import { create } from "zustand";
+// import { create } from "zustand";
 
-interface State {
+// interface State {
 
-}
+// }
 
-const initialState: State = {
+// const initialState: State = {
 
-}
+// }
 
-interface SemanticSearchStoreState extends State {
+// interface SemanticSearchStoreState extends State {
 
-}
+// }
 
-export const useSemanticSearchStore = create<SemanticSearchStoreState>((set, get) => ({
-  ...initialState,
+// export const useSemanticSearchStore = create<SemanticSearchStoreState>((set, get) => ({
+//   ...initialState,
 
-}))
+// }))
