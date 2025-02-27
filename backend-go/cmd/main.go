@@ -11,9 +11,9 @@ import (
 	"github.com/chanasia/semantic-search-system/internal/adapters/hugot"
 	"github.com/chanasia/semantic-search-system/internal/adapters/minio"
 	"github.com/chanasia/semantic-search-system/internal/adapters/repositories"
-	"github.com/chanasia/semantic-search-system/internal/config"
 	"github.com/chanasia/semantic-search-system/internal/core/domain"
 	"github.com/chanasia/semantic-search-system/internal/core/services"
+
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -23,16 +23,15 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
+	godotenv.Load()
+
 	// Connnect to db
-	DBHost := config.GetEnv("DB_HOST", "localhost")
-	DBPort := config.GetEnv("DB_PORT", "5432")
-	DBUser := config.GetEnv("DB_USER", "postgres")
-	DBPassword := config.GetEnv("DB_PASSWORD", "postgres")
-	DBName := config.GetEnv("DB_NAME", "projectdb")
-	DBSchema := config.GetEnv("DB_SCHEMA", "public")
+	DBHost := os.Getenv("DB_HOST")
+	DBPort := os.Getenv("DB_PORT")
+	DBUser := os.Getenv("DB_USER")
+	DBPassword := os.Getenv("DB_PASSWORD")
+	DBName := os.Getenv("DB_NAME")
+	DBSchema := os.Getenv("DB_SCHEMA")
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable search_path=%s", DBHost, DBPort, DBUser, DBPassword, DBName, DBSchema)
 
 	newLogger := logger.New(
@@ -98,11 +97,11 @@ func main() {
 
 	//Initial Minio
 	minioAdapter, err := minio.NewMinioAdapter(
-		config.GetEnv("MINIO_ENDPOINT", "localhost:9000"),
-		config.GetEnv("MINIO_ACCESS", "minioadmin"),
-		config.GetEnv("MINIO_SECRET", "minioadmin"),
+		os.Getenv("MINIO_ENDPOINT"),
+		os.Getenv("MINIO_ACCESS_KEY"),
+		os.Getenv("MINIO_SECRET_KEY"),
 		false,
-		config.GetEnv("MINIO_BUCKET", "topics"),
+		os.Getenv("MINIO_BUCKET"),
 	)
 	if err != nil {
 		log.Fatal(err)

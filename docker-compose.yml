@@ -31,6 +31,7 @@ services:
       context: ./backend-go
       dockerfile: dockerfile
     container_name: sss-backend
+    image: sss-backend:latest
     ports:
       - 3000:3000
     environment:
@@ -39,9 +40,11 @@ services:
       - DB_USER=sssadmin
       - DB_PASSWORD=abc12345
       - DB_NAME=projectdb
+      - DB_SCHEMA=projectdb
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=ROOTUSER
       - MINIO_SECRET_KEY=CHANGEME123
+      - MINIO_BUCKET=topics
     volumes:
       - sss_backend:/app/lib/
     depends_on:
@@ -52,10 +55,11 @@ services:
       context: .
       dockerfile: dockerfile
     container_name: sss-frontend
+    image: sss-frontend:latest
     ports:
       - 80:80
-    environment:
-      - VITE_BACKEND_URL=http://sss-backend:3000
+    # environment:
+    #   - VITE_BACKEND_URL=http://localhost:3000
     depends_on:
       - sss-backend
 

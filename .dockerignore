@@ -3,3 +3,4 @@ dist
 Dockerfile
 .dockerignore
 backend-go
+# .env

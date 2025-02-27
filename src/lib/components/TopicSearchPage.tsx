@@ -23,8 +23,9 @@ export default function TopicSearchPage() {
     setError(null);
 
     try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/topics/search?search_text=${encodeURIComponent(
+        `${backendUrl}/api/v1/topics/search?search_text=${encodeURIComponent(
           value
         )}&limit=10`
       );

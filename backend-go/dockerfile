@@ -63,9 +63,6 @@ COPY --from=builder /app/semantic-search-system /app/
 # Copy required libraries
 COPY --from=builder /app/lib/ /app/lib/
 
-# Copy .env file
-COPY --from=builder /app/.env /app/
-
 # Create symbolic link for onnxruntime.so if needed
 RUN ln -sf /app/lib/libonnxruntime.so /app/lib/onnxruntime.so
 
