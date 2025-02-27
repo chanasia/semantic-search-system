@@ -27,6 +27,7 @@ services:
     command: server /data --console-address ":9001"
 
   sss-backend:
+    platform: linux/arm64
     build: 
       context: ./backend-go
       dockerfile: dockerfile
@@ -51,6 +52,7 @@ services:
       - postgres
       - minio
   sss-frontend:
+    platform: linux/arm64
     build: 
       context: .
       dockerfile: dockerfile
