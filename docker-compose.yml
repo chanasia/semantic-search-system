@@ -1,5 +1,3 @@
-version: '3'
-
 name: semantic-search-system
 
 services:
