@@ -51,7 +51,7 @@ services:
     depends_on:
       - postgres
       - minio
-    restart: on-failure
+    # restart: on-failure
   sss-frontend:
     platform: linux/arm64
     build: 
